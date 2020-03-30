@@ -1,4 +1,4 @@
-import socket, os, json, pdb, time
+import socket, os, json, pdb, time,sys
 from threading import Thread
 
 
@@ -7,21 +7,23 @@ def socket_server_ini(adr: str, port: int):
     """
         setup socket
     """
+    #pdb.set_trace()
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     except Exception as err:
-        print('s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)')
-        err
+        print('socket.socket(socket.AF_INET, socket.SOCK_STREAM)',err)
+        sys.exit()
+        
     try:
         s.bind((adr,port))
     except Exception as err:
-        print('s.bind((adr,port))')
-        err
+        print('s.bind((adr,port))',err)
+        sys.exit()
     try:
         s.listen(5)
     except Exception as err:
-        print('s.listen(5)')
-        err
+        print('s.listen(5)',err)
+        sys.exit()
     return s
 
 class ServerSendFile(Thread):
