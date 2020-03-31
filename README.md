@@ -1,2 +1,5 @@
 # Multi_threaded_Server
-Simple project to connect a server to multiple clients by threading
+This project shows how to handle multiple clients. In addition server and client can be controlled via a GUI.
+
+
+
