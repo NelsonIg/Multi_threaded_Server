@@ -1,7 +1,9 @@
-import socket, os, json, pdb, time,sys
+import socket, os, json, pdb, time,sys, traceback
 from threading import Thread
 
-
+def save_jsonfile(fileJson: dict):
+    with open(fileJson['name']+'-copy','w')as file: #closes the file automatically
+        file.write(fileJson['content'])
 
 def socket_server_ini(adr: str, port: int):
     """
@@ -11,20 +13,73 @@ def socket_server_ini(adr: str, port: int):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     except Exception as err:
-        print('socket.socket(socket.AF_INET, socket.SOCK_STREAM)',err)
+        traceback.print_exc()
         sys.exit()
         
     try:
         s.bind((adr,port))
     except Exception as err:
-        print('s.bind((adr,port))',err)
+        traceback.print_exc()
         sys.exit()
     try:
         s.listen(5)
     except Exception as err:
-        print('s.listen(5)',err)
+        traceback.print_exc()
         sys.exit()
     return s
+
+class Client:
+    """ This class allwos the user to connect to a server and receive a textfile
+    """
+ 
+    #constructor + Type hinting adr:str appears whe creating object
+    def __init__(self,adr: str, port: int):
+        """Arguments:
+            adr:  str - Name of domain or IP
+            port: int _ between 0 and 65535
+        """
+        #test type of arguments-------------------------------------------------
+        if type(port) is not int: #raise exception if port is not integer
+            raise Exception('ip must be of type integer')
+        elif port < 0 or port > 65535:
+            raise Exception('Port must be between 0 and 65535')
+        if type(adr) is not str: #raise exception if adr is not string
+            raise Exception('adr must be of type String')
+        #-----------------------------------------------------------------------
+        self.adr     = adr
+        self.port   = port
+
+          
+    def get_file(self,fileName):
+        """
+            Receives a file from given server
+        """
+        
+        if type(fileName) is not str or fileName == '': #raise exception if adr is not string
+            raise Exception('file name not of type String or empty String')
+        msg = fileName
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(10.0)
+        
+        # resolve hostname and connect to server
+        ip = socket.gethostbyname(self.adr)
+        s.connect((ip,self.port))
+        
+        s.send(msg.encode())
+        msg = s.recv(4096).decode()                        
+        s.send(b'close')
+        s.close()
+        
+        if msg == 'not found':
+            print('\'%s\' not found by server' %(fileName))
+            raise Exception('file not found by server')
+            return
+
+        fileJson = json.loads(msg)
+        save_jsonfile(fileJson)
+        return fileJson
+
 
 class ServerSendFile(Thread):
     """
@@ -37,6 +92,7 @@ class ServerSendFile(Thread):
         self.port     = port
         self.con      = con
         Thread.__init__(self)
+        
        
     def run(self):
         while True:
@@ -59,9 +115,10 @@ class ServerSendFile(Thread):
                     self.con.send(msg.encode())
                 #--------------------------------------------------
                 except Exception as err:
+                    traceback.print_exc()
                     msg ='not found'
                     self.con.send(msg.encode())
             except Exception as err:
-                print(err)
+                traceback.print_exc()
                 break
                 
