@@ -2,8 +2,13 @@ import socket, os, json, pdb, time,sys, traceback
 from threading import Thread
 
 def save_jsonfile(fileJson: dict):
-    with open(fileJson['name']+'-copy','w')as file: #closes the file automatically
-        file.write(fileJson['content'])
+    try:#txtfile
+        with open(fileJson['name']+'-copy','w')as file: #closes the file automatically
+            file.write(fileJson['content'])
+    except:#binaryfile
+        with open(fileJson['name']+'-copy','wb')as file: #closes the file automatically
+            file.write(fileJson['content'].encode('cp855'))
+            
 
 def socket_server_ini(adr: str, port: int):
     """
@@ -65,7 +70,6 @@ class Client:
         # resolve hostname and connect to server
         ip = socket.gethostbyname(self.adr)
         s.connect((ip,self.port))
-        
         s.send(msg.encode())
         msg = s.recv(4096).decode()                        
         s.send(b'close')
@@ -105,13 +109,13 @@ class ServerSendFile(Thread):
                     self.con.close()
                     break
                 #-------------- open and read file -----------------
-                fileJson ={}
+                #fileJson ={}
                 try:
-                    file = open(msg,'r')
-                    fileJson['name'] = msg
-                    fileJson['content'] = file.read()
-                    file.close()
-                    msg = json.dumps(fileJson)
+                    #file = open(msg,'r')
+                    #fileJson['name'] = msg
+                    #fileJson['content'] = file.read()
+                    #file.close()
+                    msg = json.dumps(read_file(msg))
                     self.con.send(msg.encode())
                 #--------------------------------------------------
                 except Exception as err:
@@ -122,3 +126,17 @@ class ServerSendFile(Thread):
                 traceback.print_exc()
                 break
                 
+def read_file(fileName: str):
+    fileJson = {}
+    try:# textfile
+        with open(fileName)as file:
+            fileJson['content'] = file.read()
+    except:
+        try:#binary type
+            with open(fileName,'rb')as file:
+                fileJson['content'] = file.read().decode('cp855') #cp855 to be able to decode to string
+        except: #not found
+            raise Exception('file not found %s' %(fileName))
+    fileJson['name'] = fileName
+    return fileJson
+    
