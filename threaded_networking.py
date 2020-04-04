@@ -65,13 +65,14 @@ class Client:
         msg = fileName
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(10.0)
+        s.settimeout(20.0)
         
         # resolve hostname and connect to server
         ip = socket.gethostbyname(self.adr)
         s.connect((ip,self.port))
         s.send(msg.encode())
-        msg = s.recv(4096).decode()                        
+        #msg = s.recv(4096).decode()
+        recv_filelines(s,fileName)
         s.send(b'close')
         s.close()
         
@@ -79,10 +80,10 @@ class Client:
             print('\'%s\' not found by server' %(fileName))
             raise Exception('file not found by server')
             return
-
-        fileJson = json.loads(msg)
-        save_jsonfile(fileJson)
-        return fileJson
+       # fileJson={}
+        #fileJson = json.loads(msg)
+        #save_jsonfile(fileJson)
+       # return fileJson
 
 
 class ServerSendFile(Thread):
@@ -115,8 +116,12 @@ class ServerSendFile(Thread):
                     #fileJson['name'] = msg
                     #fileJson['content'] = file.read()
                     #file.close()
-                    msg = json.dumps(read_file(msg))
-                    self.con.send(msg.encode())
+
+                    #msg = json.dumps(read_file(msg))
+                    #self.con.send(msg.encode())
+
+                    l = read_filelines(msg)
+                    send_filelines(self.con,l)
                 #--------------------------------------------------
                 except Exception as err:
                     traceback.print_exc()
@@ -139,4 +144,39 @@ def read_file(fileName: str):
             raise Exception('file not found %s' %(fileName))
     fileJson['name'] = fileName
     return fileJson
-    
+
+def read_filelines(fileName: str):
+    #pdb.set_trace()
+    try:# textfile
+        with open(fileName)as file:
+             l = file.readlines()
+             l = [l[x].encode() for x in range(0,len(l))] # encode each element of list
+        print('textfile read\n')
+    except:
+        try:#binary type
+            with open(fileName,'rb')as file:
+                l = file.readlines()
+        except: #not found
+            raise Exception('file not found %s' %(fileName))
+    return l
+def send_filelines(c,fileList: list):
+    for x in range(0,len(fileList)):
+       c.send(fileList[x])
+    c.send(b'END')
+def recv_filelines(s,fileName: str):
+    fileList = []
+    while True:
+        line = s.recv(4096).decode('cp855')
+        if line == 'END': break
+        fileList.append(line)
+    try:#txtfile
+        with open(fileName+'-copy','w')as file: #closes the file automatically
+            file.writelines(fileList)
+    except:#binaryfile
+        for x in range(0,len(fileList)):
+            fileList[x] = fileList[x].encode('cp855')
+        with open(fileName+'-copy','wb')as file: #closes the file automatically
+            file.writelines(fileList)
+        
+        
+        
