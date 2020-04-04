@@ -65,7 +65,7 @@ class Client:
         msg = fileName
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(20.0)
+        s.settimeout(5.0)
         
         # resolve hostname and connect to server
         ip = socket.gethostbyname(self.adr)
