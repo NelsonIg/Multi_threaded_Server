@@ -1,5 +1,5 @@
 # Multi_threaded_Server
-This project shows how to handle multiple clients and transfer a given textfile, png, jpg etc. from one server to its clients. In addition, server and client can be controlled via a GUI.
+This project demonstrates how to handle multiple clients and to transfer a given textfile, png, jpg etc. from one server to its clients. In addition, server and client can be controlled via a GUI.
 ## 
 Module "threaded_networking": contains classes Server and Client
 ##
