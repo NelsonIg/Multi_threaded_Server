@@ -1,4 +1,4 @@
-import socket, os, json, pdb, time,sys, traceback
+import socket, os, json, pdb, time,sys, traceback, threading
 from threading import Thread
 
 def save_jsonfile(fileJson: dict):
@@ -93,14 +93,22 @@ class ServerSendFile(Thread):
             - if 'close' is received, connection is closed.
     """
     def __init__(self, con,ip: str,port: int):
+        Thread.__init__(self)
         self.ip       = ip
         self.port     = port
         self.con      = con
-        Thread.__init__(self)
+        self._stop_event = threading.Event()
         
        
     def run(self):
         while True:
+            #check flag from self.stop()
+            if self._stop_event is True:
+                self.con.close()
+                print('[self]:closed connection to [client %i]' %(self.port) )
+                break
+
+            #send file
             try:
                 msg = self.con.recv(1028).decode()
                 print('[client %i]: %s\n'%(self.port,msg))
@@ -112,14 +120,8 @@ class ServerSendFile(Thread):
                 #-------------- open and read file -----------------
                 #fileJson ={}
                 try:
-                    #file = open(msg,'r')
-                    #fileJson['name'] = msg
-                    #fileJson['content'] = file.read()
-                    #file.close()
-
                     #msg = json.dumps(read_file(msg))
                     #self.con.send(msg.encode())
-
                     l = read_filelines(msg)
                     send_filelines(self.con,l)
                 #--------------------------------------------------
@@ -130,6 +132,11 @@ class ServerSendFile(Thread):
             except Exception as err:
                 traceback.print_exc()
                 break
+            
+    def stop(self):
+        self._stop_event.set()
+    def stopped(self):
+        return self._stop_event.is_set()
                 
 def read_file(fileName: str):
     fileJson = {}
@@ -151,7 +158,6 @@ def read_filelines(fileName: str):
         with open(fileName)as file:
              l = file.readlines()
              l = [l[x].encode() for x in range(0,len(l))] # encode each element of list
-        print('textfile read\n')
     except:
         try:#binary type
             with open(fileName,'rb')as file:
@@ -159,14 +165,21 @@ def read_filelines(fileName: str):
         except: #not found
             raise Exception('file not found %s' %(fileName))
     return l
+
 def send_filelines(c,fileList: list):
     for x in range(0,len(fileList)):
        c.send(fileList[x])
+       c.recv(1028)# client send 'ack' when received
     c.send(b'END')
+    c.recv(1028)
+    
 def recv_filelines(s,fileName: str):
     fileList = []
     while True:
         line = s.recv(4096).decode('cp855')
+        if line == 'not found':
+            raise Exception('file not found %s' %(fileName))
+        s.send(b'Ack')
         if line == 'END': break
         fileList.append(line)
     try:#txtfile
