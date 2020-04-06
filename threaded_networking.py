@@ -1,37 +1,6 @@
 import socket, os, json, pdb, time,sys, traceback, threading
 from threading import Thread
 
-def save_jsonfile(fileJson: dict):
-    try:#txtfile
-        with open(fileJson['name']+'-copy','w')as file: #closes the file automatically
-            file.write(fileJson['content'])
-    except:#binaryfile
-        with open(fileJson['name']+'-copy','wb')as file: #closes the file automatically
-            file.write(fileJson['content'].encode('cp855'))
-            
-
-def socket_server_ini(adr: str, port: int):
-    """
-        setup socket
-    """
-    #pdb.set_trace()
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    except Exception as err:
-        traceback.print_exc()
-        sys.exit()
-        
-    try:
-        s.bind((adr,port))
-    except Exception as err:
-        traceback.print_exc()
-        sys.exit()
-    try:
-        s.listen(5)
-    except Exception as err:
-        traceback.print_exc()
-        sys.exit()
-    return s
 
 class Client:
     """ This class allwos the user to connect to a server and receive a textfile
@@ -63,16 +32,20 @@ class Client:
         if type(fileName) is not str or fileName == '': #raise exception if adr is not string
             raise Exception('file name not of type String or empty String')
         msg = fileName
-
+        #creat directory
+        downloadtime = time.localtime(time.time())
+        downloadDir = 'downloads_'+str(downloadtime[0])+'_'+str(downloadtime[1])
+        if os.path.isdir(downloadDir) is False:
+            os.mkdir(downloadDir)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(5.0)
+        s.settimeout(10.0)
         
         # resolve hostname and connect to server
         ip = socket.gethostbyname(self.adr)
         s.connect((ip,self.port))
         s.send(msg.encode())
         #msg = s.recv(4096).decode()
-        recv_filelines(s,fileName)
+        recv_filelines(s,fileName,downloadDir)
         s.send(b'close')
         s.close()
         
@@ -173,8 +146,9 @@ def send_filelines(c,fileList: list):
     c.send(b'END')
     c.recv(1028)
     
-def recv_filelines(s,fileName: str):
+def recv_filelines(s,fileName: str,downloadDir :str):
     fileList = []
+    
     while True:
         line = s.recv(4096).decode('cp855')
         if line == 'not found':
@@ -183,13 +157,44 @@ def recv_filelines(s,fileName: str):
         if line == 'END': break
         fileList.append(line)
     try:#txtfile
-        with open(fileName+'-copy','w')as file: #closes the file automatically
+        with open(downloadDir+'/'+os.path.split(fileName)[1],'w')as file: #closes the file automatically
             file.writelines(fileList)
     except:#binaryfile
         for x in range(0,len(fileList)):
             fileList[x] = fileList[x].encode('cp855')
-        with open(fileName+'-copy','wb')as file: #closes the file automatically
+        with open(downloadDir+'/'+os.path.split(fileName)[1],'wb')as file: #closes the file automatically
             file.writelines(fileList)
+
+
+
+def save_jsonfile(fileJson: dict):
+    try:#txtfile
+        with open(fileJson['name']+'-copy','w')as file: #closes the file automatically
+            file.write(fileJson['content'])
+    except:#binaryfile
+        with open(fileJson['name']+'-copy','wb')as file: #closes the file automatically
+            file.write(fileJson['content'].encode('cp855'))
+            
+
+def socket_server_ini(adr: str, port: int):
+    """
+        setup socket
+    """
+    #pdb.set_trace()
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    except Exception as err:
+        traceback.print_exc()
+        sys.exit()
         
-        
-        
+    try:
+        s.bind((adr,port))
+    except Exception as err:
+        traceback.print_exc()
+        sys.exit()
+    try:
+        s.listen(5)
+    except Exception as err:
+        traceback.print_exc()
+        sys.exit()
+    return s

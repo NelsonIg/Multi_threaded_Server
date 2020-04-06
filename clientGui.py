@@ -12,7 +12,7 @@ def file_request():
     textConsole.delete('1.0',END)
     
     try:
-        c = threaded_networking.Client('localhost',int(entryPort.get()))      
+        c = threaded_networking.Client(entryIp.get(),int(entryPort.get()))      
         file = c.get_file(entryFile.get())      
         textConsole.insert(INSERT, 'file received')
     except Exception as err:

@@ -12,7 +12,7 @@ class start_server(Thread):
 
     def run(self):
         s = threaded_networking.socket_server_ini('',0)
-        s.settimeout(5)
+        s.settimeout(10)
 ##        print('Server started:\n Host: %s\n Port: %i'
 ##              %(socket.gethostbyname(socket.gethostname()),s.getsockname()[1]))
         self.hostIp = socket.gethostbyname(socket.gethostname())
