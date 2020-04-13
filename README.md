@@ -3,7 +3,7 @@ This project demonstrates how to handle multiple clients and to transfer a given
 
 Module "threaded_networking":
 - Contains Server and Client
-- Server is subclass of Thread
+- Server is subclass of Thread.
 
 1. Start "serverGui.py"
 
