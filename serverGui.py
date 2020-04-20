@@ -5,7 +5,12 @@ import threading
 
 
 class start_server(Thread):
-    """Handles socket and acception of clients as a thread"""
+    """ Handles socket and acception of clients as a thread:
+        run(): 1. initializes server by callin socket_server_ini from module
+                    'threaded_networking'
+                2. accepts new clients with class ServerSendFile from
+                'threaded_networking'
+    """
     def __init__(self):
         Thread.__init__(self)
         self._stop_event = threading.Event()
