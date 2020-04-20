@@ -38,6 +38,7 @@ def close():
     m.destroy()
 #Layout of User Interface
 m = tk.Tk()
+m.resizable(0,0) #window not resizable 
 m.config(bg ='honeydew3')
 m.title('Server')
 

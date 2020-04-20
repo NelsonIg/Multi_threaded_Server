@@ -4,6 +4,7 @@ import threaded_networking
 import pdb
 
 m = tk.Tk() #where m is the name of the main window object
+m.resizable(0,0) #window not resizable 
 m.config(bg ='honeydew3')
 m.title('Client')
 
