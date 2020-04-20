@@ -1,55 +1,8 @@
-import socket, pdb, threaded_networking, time
+import socket, pdb, time
 import tkinter as tk
 from threading import Thread
 import threading
-
-
-class start_server(Thread):
-    """ Handles socket and acception of clients as a thread:
-        run(): 1. initializes server by callin socket_server_ini from module
-                    'threaded_networking'
-                2. accepts new clients with class ServerSendFile from
-                'threaded_networking'
-    """
-    def __init__(self):
-        Thread.__init__(self)
-        self._stop_event = threading.Event()
-
-    def run(self):
-        s = threaded_networking.socket_server_ini('',0)
-        s.settimeout(10)
-##        print('Server started:\n Host: %s\n Port: %i'
-##              %(socket.gethostbyname(socket.gethostname()),s.getsockname()[1]))
-        self.hostIp = socket.gethostbyname(socket.gethostname())
-        self.port   = s.getsockname()[1]
-
-        t = [] #list of threads
-        num = 0
-        while True:
-            if self.stopped() is True:
-                for x in range(0,len(t)):
-                    t[x].stop()
-                    t[x].join()
-                s.close()
-                print('server closed')
-                return
-                
-            try:
-                (c,(ip,port)) = s.accept() #accept() returns (socket,(Ip,port))
-                print('new connection %s %i'%(ip,port))
-                # fill list with threads
-                t.append(threaded_networking.ServerSendFile(c,ip,port)) 
-                t[num].start()
-                num = num + 1
-            except:
-                pass
-            
-    def stop(self):
-        self._stop_event.set()
-
-    def stopped(self):
-        return self._stop_event.is_set()
-
+import threaded_networking
 
 #Functions for GUI buttons
 serverOn = False
@@ -58,7 +11,7 @@ def start():
     global top,serverOn
     if serverOn is False:
         textConsole.delete(1.0, tk.END)
-        top = start_server()
+        top = threaded_networking.ClientHandler()
         top.start()
         time.sleep(1)
         textConsole.insert(tk.INSERT, 'Server started:\n' + 'IP: ' +

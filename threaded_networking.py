@@ -1,6 +1,8 @@
 import socket, os, json, pdb, time,sys, traceback, threading
 from threading import Thread
-
+#--------------------------------------------------------------------------------------------------
+    #Client
+#--------------------------------------------------------------------------------------------------
 
 class Client:
     """ This class allwos the user to connect to a server and receive a textfile
@@ -28,13 +30,13 @@ class Client:
         """
             Receives a file from given server
         """
-        
         if type(fileName) is not str or fileName == '': #raise exception if adr is not string
             raise Exception('file name not of type String or empty String')
         msg = fileName
         #creat directory
         downloadtime = time.localtime(time.time())
-        downloadDir = 'downloads_'+str(downloadtime[0])+'_'+str(downloadtime[1])
+        downloadDir = ('downloads_'+str(downloadtime[0])+'_'+
+                       str(downloadtime[1])+'_'+str(downloadtime[2]))
         if os.path.isdir(downloadDir) is False:
             os.mkdir(downloadDir)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -53,13 +55,60 @@ class Client:
             print('\'%s\' not found by server' %(fileName))
             raise Exception('file not found by server')
             return
-       # fileJson={}
-        #fileJson = json.loads(msg)
-        #save_jsonfile(fileJson)
-       # return fileJson
 
+#--------------------------------------------------------------------------------------------------
+       #Client Handler
+#--------------------------------------------------------------------------------------------------
 
-class ServerSendFile(Thread):
+class ClientHandler(Thread):
+    """ Handles socket and acception of clients as a thread:
+        run(): 1. initializes server by callin socket_server_ini from module
+                    'threaded_networking'
+                2. accepts new clients with class ServerSendFile from
+                'threaded_networking'
+    """
+    def __init__(self):
+        Thread.__init__(self)
+        self._stop_event = threading.Event()
+
+    def run(self):
+        s = socket_server_ini('',0)
+        s.settimeout(10)
+        self.hostIp = socket.gethostbyname(socket.gethostname())
+        self.port   = s.getsockname()[1]
+
+        t = [] #list of threads
+        num = 0
+        while True:
+            if self.stopped() is True:
+                for x in range(0,len(t)):
+                    t[x].stop()
+                    t[x].join()
+                s.close()
+                print('server closed')
+                return
+                
+            try:
+                (c,(ip,port)) = s.accept() #accept() returns (socket,(Ip,port))
+                print('new connection %s %i'%(ip,port))
+                # fill list with threads
+                t.append(FileServer(c,ip,port)) 
+                t[num].start()
+                num = num + 1
+            except:
+                pass
+            
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
+#-------------------------------------------------------------------------------------------------
+    #Server
+#--------------------------------------------------------------------------------------------------
+    
+class FileServer(Thread):
     """
         Class sends requested file or:
             - 'not found' if requested file is not in repository
@@ -91,10 +140,7 @@ class ServerSendFile(Thread):
                     self.con.close()
                     break
                 #-------------- open and read file -----------------
-                #fileJson ={}
                 try:
-                    #msg = json.dumps(read_file(msg))
-                    #self.con.send(msg.encode())
                     l = read_filelines(msg)
                     send_filelines(self.con,l)
                 #--------------------------------------------------
@@ -110,6 +156,10 @@ class ServerSendFile(Thread):
         self._stop_event.set()
     def stopped(self):
         return self._stop_event.is_set()
+    
+#--------------------------------------------------------------------------------------------------
+    #Functions
+#--------------------------------------------------------------------------------------------------
                 
 def read_file(fileName: str):
     fileJson = {}
@@ -126,13 +176,12 @@ def read_file(fileName: str):
     return fileJson
 
 def read_filelines(fileName: str):
-    #pdb.set_trace()
     try:# textfile
         with open(fileName)as file:
              l = file.readlines()
              l = [l[x].encode() for x in range(0,len(l))] # encode each element of list
     except:
-        try:#binary type
+        try:#byte type
             with open(fileName,'rb')as file:
                 l = file.readlines()
         except: #not found
