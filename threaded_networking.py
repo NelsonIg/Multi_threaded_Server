@@ -74,7 +74,6 @@ class ClientHandler(Thread):
     def run(self):
         s = socket_server_ini('',0)
         s.settimeout(10)
-        self.hostIp = socket.gethostbyname(socket.gethostname())
         self.port   = s.getsockname()[1]
 
         t = [] #list of threads
@@ -97,6 +96,7 @@ class ClientHandler(Thread):
                 num = num + 1
             except:
                 pass
+    
             
     def stop(self):
         self._stop_event.set()
@@ -247,3 +247,13 @@ def socket_server_ini(adr: str, port: int):
         traceback.print_exc()
         sys.exit()
     return s
+
+def get_local_ip():
+    """
+        returns the private ip of the host
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(('222.222.222.222',1))
+    ip = s.getsockname()[0]
+    s.close()
+    return ip

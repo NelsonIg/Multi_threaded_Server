@@ -15,11 +15,11 @@ def start():
         top.start()
         time.sleep(1)
         textConsole.insert(tk.INSERT, 'Server started:\n' + 'IP: ' +
-                           top.hostIp +'\nPort: ' + str(top.port)+'\n')
+                           threaded_networking.get_local_ip() +'\nPort: ' + str(top.port)+'\n')
         serverOn = True
     else:
         textConsole.insert(tk.INSERT, 'Server already started:\n' + 'IP: ' +
-                           top.hostIp +'\nPort: ' + str(top.port)+'\n')
+                           threaded_networking.get_local_ip() +'\nPort: ' + str(top.port)+'\n')
 def stop():
     global top, serverOn
     if serverOn is True:
@@ -36,6 +36,7 @@ def close():
         top.stop()
         top.join()
     m.destroy()
+    
 #Layout of User Interface
 m = tk.Tk()
 m.resizable(0,0) #window not resizable 
