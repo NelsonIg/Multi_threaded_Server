@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import*
 import threaded_networking
-import pdb
+import pdb, time
 
 m = tk.Tk() #where m is the name of the main window object
 m.resizable(0,0) #window not resizable 
@@ -13,9 +13,13 @@ def file_request():
     textConsole.delete('1.0',END)
     
     try:
-        c = threaded_networking.Client(entryIp.get(),int(entryPort.get()))      
-        file = c.get_file(entryFile.get())      
-        textConsole.insert(INSERT, 'file received')
+        c = threaded_networking.Client(entryIp.get(),int(entryPort.get()))
+        t1 = time.time()
+        file = c.get_file(entryFile.get())
+        t2 = time.time()
+        tdif = t2-t1
+        #textConsole.insert(INSERT, 'file received\ntime needed: '+str(round(t2-t1,3))+' seconds')
+        textConsole.insert(INSERT, f'file received\ntime needed: {int(tdif//60)} min {round(tdif%60,3)} sec')
     except Exception as err:
         textConsole.insert(INSERT, err)
         print(err)
