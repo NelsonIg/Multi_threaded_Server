@@ -11,4 +11,4 @@ Module "threaded_networking":
 
 3. Have Fun!
 
-![Image of Gui](https://github.com/NelsonIg/Multi_threaded_Server/tree/master/images/screenshot.PNG)
+
